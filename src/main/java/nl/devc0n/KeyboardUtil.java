@@ -4,20 +4,12 @@ import com.github.kwhat.jnativehook.GlobalScreen;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 public class KeyboardUtil implements NativeKeyListener {
 
     private boolean left = false, right = false, up = false, down = false;
 
     public KeyboardUtil() {
         try {
-            // Disable the logging from JNativeHook
-            Logger logger = Logger.getLogger(GlobalScreen.class.getPackageName());
-            logger.setLevel(Level.WARNING);
-            logger.setUseParentHandlers(false);
-
             GlobalScreen.registerNativeHook();
             GlobalScreen.addNativeKeyListener(this);
         } catch (Exception e) {

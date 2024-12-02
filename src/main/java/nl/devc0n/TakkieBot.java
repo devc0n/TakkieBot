@@ -60,41 +60,24 @@ public class TakkieBot {
             model.init();
         }
 
-        try {
-            trainingDataList = loadTrainingData("src/main/resources/trainingData.dat");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        var isTraining = false;
-
-        if (isTraining) {
-            for (int i = 0; i < 2; i++) {
-                System.out.println("Training " + i);
-                for (TrainingData data : trainingDataList) {
-                    System.out.println(System.currentTimeMillis());
-                    train(data.getState(), data.getAction(), data.getReward(), data.getNextState());
-                }
-                trainingDataList.clear();
-            }
-        }
-
 
         GameHandler gameHandler = new GameHandler(browserManager.getDriver());
         gameHandler.setupInitialGameState();
-        var programOption = "gather";
+        var programOption = "train";
         switch (programOption) {
             case "gather":
                 gatherTrainingData(browserManager);
                 break;
             case "train":
+                RLTrainer trainer = new RLTrainer();
+                trainer.trainOnData();
+                ModelSerializer.writeModel(model, MODEL_PATH, true);
                 break;
             case "play":
                 playGame(gameHandler, browserManager, trainingDataList);
                 break;
-
         }
+        printAsciiArt();
     }
 
     public static void playGame(GameHandler gameHandler, BrowserManager browserManager, List<TrainingData> trainingDataList) throws IOException, InterruptedException {
