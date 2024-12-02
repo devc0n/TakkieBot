@@ -25,7 +25,13 @@ public class ScreenshotUtil {
         }
     }
 
-    public static BufferedImage takeScreenshot(int x, int y, int width, int height) {
+    public static BufferedImage takeScreenshot(org.openqa.selenium.Rectangle rect) {
+        var width = 250;
+        var height = 300;
+
+        var x = rect.getX() + 18 + 125;
+        var y = rect.getY() + 150 + 230;
+
         Rectangle screenRect = new Rectangle(x, y, width, height);
         return robot.createScreenCapture(screenRect);
     }
@@ -36,6 +42,7 @@ public class ScreenshotUtil {
     }
 
     public static INDArray preprocessScreenshot(BufferedImage screenshot) {
+        // Resize the image to 84x84
         BufferedImage resizedImage = new BufferedImage(84, 84, BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = resizedImage.createGraphics();
         g2d.drawImage(screenshot, 0, 0, 84, 84, null);

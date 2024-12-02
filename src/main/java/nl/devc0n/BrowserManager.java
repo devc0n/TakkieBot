@@ -35,7 +35,6 @@ public class BrowserManager {
         }
     }
 
-    public ArrayList<Integer> screenshotTimes = new ArrayList<Integer>();
     private WebDriver driver;
 
     public void startBrowser() {
@@ -55,54 +54,5 @@ public class BrowserManager {
             driver.quit();
         }
     }
-
-
-//    public BufferedImage takeScreenshot() throws IOException {
-//        var screenshotStartTimer = System.currentTimeMillis();
-//
-//        // Take a screenshot of the entire page
-//        byte[] screenshotBytes = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
-//        BufferedImage fullImage = ImageIO.read(new ByteArrayInputStream(screenshotBytes));
-//
-//        // Get the dimensions of the viewport element
-//        var viewport = driver.findElement(By.className("view-frame"));
-//        var rect = viewport.getRect();
-//
-//        // Crop the screenshot to the dimensions of the viewport
-//        BufferedImage croppedImage = fullImage.getSubimage(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
-//
-//        var screenshotAfterTimer = System.currentTimeMillis();
-//        screenshotTimes.add((int) (screenshotAfterTimer - screenshotStartTimer));
-//
-//        return croppedImage;
-//    }
-//
-//
-//    public void saveScreenshot() throws IOException {
-//        // Take a screenshot and save it to a file
-//        var viewport = driver.findElement(By.className("view-frame"));
-//        File screenshotFile = viewport.getScreenshotAs(OutputType.FILE);
-//
-//        // Convert the screenshot file into a BufferedImage
-//        BufferedImage bufferedImage = ImageIO.read(screenshotFile);
-//
-////        // Optionally manipulate the BufferedImage (e.g., crop or resize)
-////        System.out.println("Image Width: " + bufferedImage.getWidth());
-////        System.out.println("Image Height: " + bufferedImage.getHeight());
-//
-//        File outputDir = new File("src/main/resources/screenshots");
-//        if (!outputDir.exists()) {
-//            outputDir.mkdirs();
-//        }
-//
-//        var id = System.currentTimeMillis();
-//
-//        // Save the BufferedImage back to disk (if needed)
-//        File outputImageFile = new File("src/main/resources/screenshots/screenshot-" + id + ".jpeg");
-//        ImageIO.write(bufferedImage, "jpeg", outputImageFile);
-//    }
-
-
-
 
 }

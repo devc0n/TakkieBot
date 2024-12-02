@@ -34,4 +34,8 @@ public class TrainingData implements Serializable {
     public INDArray getNextState() {
         return nextState;
     }
+
+    public void setReward(double reward) {
+        this.reward = reward;
+    }
 }

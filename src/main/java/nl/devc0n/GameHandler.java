@@ -24,7 +24,7 @@ public class GameHandler {
 
     public double performAction(int action) throws InterruptedException {
         actionMap.put(action, actionMap.getOrDefault(action, 0) + 1);
-        System.out.println(actionMap);
+
         switch (action) {
             case 0:
                 return 0.2;
@@ -69,8 +69,7 @@ public class GameHandler {
                 wait.until(ExpectedConditions.presenceOfElementLocated(By.className("close")));
         closeInstructionsButton.click();
 
-        wait.until(ExpectedConditions.elementToBeClickable(By.id("game-canvas")));
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(5));
+        Thread.sleep(4000);
     }
 
 }

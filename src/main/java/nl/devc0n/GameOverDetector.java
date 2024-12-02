@@ -1,12 +1,16 @@
 package nl.devc0n;
 
+import org.nd4j.linalg.api.ndarray.INDArray;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.File;
+import java.io.IOException;
 
 
 public class GameOverDetector {
@@ -23,7 +27,12 @@ public class GameOverDetector {
         this.template = bufferedImageToMat(templateImage);
     }
 
-    public boolean detectGameOverWithTemplate(BufferedImage screenShot) {
+    public boolean detectGameOverWithTemplate(BufferedImage screenShot) throws IOException {
+
+
+
+
+
         // Convert the screenshot to OpenCV Mat
         Mat screenshotMat = bufferedImageToMat(screenShot);
 
@@ -42,7 +51,7 @@ public class GameOverDetector {
 
         // Find the best match location
         Core.MinMaxLocResult mmr = Core.minMaxLoc(result);
-        double threshold = 0.35; // Set a threshold for match quality (35% match)
+        double threshold = 0.15; // Set a threshold for match quality (35% match)
 
         // Check if the match is strong enough
         var isGameOver = mmr.maxVal >= threshold;

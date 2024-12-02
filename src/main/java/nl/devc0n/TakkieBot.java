@@ -14,36 +14,26 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.learning.config.Adam;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Rectangle;
+import org.openqa.selenium.WebDriver;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.Random;
 
 public class TakkieBot {
     private static final String MODEL_PATH = "src/main/resources/model.zip";
     private static final Random random = new Random();
     private static MultiLayerNetwork model;
-
-//    static {
-//        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-//    }
+    private WebDriver driver;
 
     public static void main(String[] args) throws Exception {
-        BufferedImage template = ImageIO.read(new File("src/main/resources/masks/mask.png"));
-        GameOverDetector gameOverDetector = new GameOverDetector(template);
-
         BrowserManager browserManager = new BrowserManager();
         browserManager.startBrowser();
 
@@ -53,27 +43,17 @@ public class TakkieBot {
         if (Files.exists(Paths.get(MODEL_PATH))) {
             model = ModelSerializer.restoreMultiLayerNetwork(MODEL_PATH, true);
         } else {
-            MultiLayerConfiguration config = new NeuralNetConfiguration.Builder().seed(123)
-                    .updater(new Adam(0.00025)) // Optimizer
-                    .list().layer(0, new ConvolutionLayer.Builder(8,
-                            8) // Convolutional layer for feature extraction
+            MultiLayerConfiguration config = new NeuralNetConfiguration.Builder().seed(123).updater(new Adam(0.00025)) // Optimizer
+                    .list().layer(0, new ConvolutionLayer.Builder(8, 8) // Convolutional layer for feature extraction
                             .stride(4, 4).nIn(3) // RGB input
-                            .nOut(32).activation(Activation.RELU)
-                            .dataFormat(CNN2DFormat.NHWC) // Set data format to NHWC (channels last)
-                            .build()).layer(1, new ConvolutionLayer.Builder(4, 4).stride(2, 2)
-                            .nIn(32) // Set nIn to match nOut of the previous layer
-                            .nOut(64).activation(Activation.RELU)
-                            .dataFormat(CNN2DFormat.NHWC) // Set data format to NHWC (channels last)
-                            .build()).layer(2, new DenseLayer.Builder().nIn(64 * 9 *
-                                    9) // Set nIn to match the flattened output of the previous layer
-                            .nOut(512).activation(Activation.RELU).build()).layer(3,
-                            new OutputLayer.Builder(
-                                    LossFunctions.LossFunction.MSE) // Output layer for Q-values
-                                    .nIn(512) // Set nIn to match nOut of the previous layer
-                                    .nOut(5) // Number of possible actions
-                                    .activation(Activation.IDENTITY).build()).setInputType(
-                            InputType.convolutional(84, 84, 3,
-                                    CNN2DFormat.NHWC)) // Set input type with NHWC format
+                            .nOut(32).activation(Activation.RELU).dataFormat(CNN2DFormat.NHWC) // Set data format to NHWC (channels last)
+                            .build()).layer(1, new ConvolutionLayer.Builder(4, 4).stride(2, 2).nIn(32) // Set nIn to match nOut of the previous layer
+                            .nOut(64).activation(Activation.RELU).dataFormat(CNN2DFormat.NHWC) // Set data format to NHWC (channels last)
+                            .build()).layer(2, new DenseLayer.Builder().nIn(64 * 9 * 9) // Set nIn to match the flattened output of the previous layer
+                            .nOut(512).activation(Activation.RELU).build()).layer(3, new OutputLayer.Builder(LossFunctions.LossFunction.MSE) // Output layer for Q-values
+                            .nIn(512) // Set nIn to match nOut of the previous layer
+                            .nOut(5) // Number of possible actions
+                            .activation(Activation.IDENTITY).build()).setInputType(InputType.convolutional(84, 84, 3, CNN2DFormat.NHWC)) // Set input type with NHWC format
                     .build();
 
             model = new MultiLayerNetwork(config);
@@ -82,103 +62,105 @@ public class TakkieBot {
 
         try {
             trainingDataList = loadTrainingData("src/main/resources/trainingData.dat");
-            for (TrainingData data : trainingDataList) {
-                train(data.getState(), data.getAction(), data.getReward(), data.getNextState());
-            }
+
         } catch (Exception e) {
-            System.out.println("No training data found. Starting from scratch.");
+            e.printStackTrace();
+        }
+
+        var isTraining = false;
+
+        if (isTraining) {
+            for (int i = 0; i < 2; i++) {
+                System.out.println("Training " + i);
+                for (TrainingData data : trainingDataList) {
+                    System.out.println(System.currentTimeMillis());
+                    train(data.getState(), data.getAction(), data.getReward(), data.getNextState());
+                }
+                trainingDataList.clear();
+            }
         }
 
 
         GameHandler gameHandler = new GameHandler(browserManager.getDriver());
         gameHandler.setupInitialGameState();
-        GameStateReader gameScoreReader = new GameStateReader(browserManager);
+        var programOption = "gather";
+        switch (programOption) {
+            case "gather":
+                gatherTrainingData(browserManager);
+                break;
+            case "train":
+                break;
+            case "play":
+                playGame(gameHandler, browserManager, trainingDataList);
+                break;
 
-        // Load training data and train the model
-
-
-        playGame(gameHandler, gameScoreReader, browserManager, gameOverDetector, trainingDataList);
+        }
     }
 
-    public static void playGame(GameHandler gameHandler, GameStateReader gameStateReader,
-                                BrowserManager browserManager, GameOverDetector gameOverDetector,
-                                List<TrainingData> trainingDataList)
-            throws IOException, InterruptedException {
+    public static void playGame(GameHandler gameHandler, BrowserManager browserManager, List<TrainingData> trainingDataList) throws IOException, InterruptedException {
         var driver = browserManager.getDriver();
         var isGameOver = false;
 
-        Queue<GameStep> recentSteps = new LinkedList<>();
-
-
+        BufferedImage template = ImageIO.read(new File("src/main/resources/masks/mask.png"));
+        GameOverDetector gameOverDetector = new GameOverDetector(template);
+        gameOverDetector.detectGameOverWithTemplate(template);
 
         var game = driver.findElement(By.id("game"));
         var rect = game.getRect();
 
-        var width = rect.getWidth() * 0.66;
-        var heigth = rect.getHeight() * 0.66;
-        var diffWidth = (rect.getWidth() - width) / 2;
-        int x = (int) ((rect.getX() + 40) + diffWidth);
-        var diffHeigth = (rect.getHeight() - heigth) / 2;
-        int y = (int) ((rect.getY() + 180) + diffHeigth);
-        int gameWidth = rect.getWidth() / 2;
-        int gameHeight = rect.getHeight() / 2;
-
-        int i = 1;
-
-        while (true) {
-            var screenshot = ScreenshotUtil.takeScreenshot(x, y, gameWidth, gameHeight);
+        var isPlaying = true;
+        LinkedList<TrainingData> currentGameData = new LinkedList<>();
+        while (isPlaying) {
+            var startTime = System.currentTimeMillis();
+            var screenshot = ScreenshotUtil.takeScreenshot(rect);
             var state = ScreenshotUtil.preprocessScreenshot(screenshot);
-
-//            var time = System.currentTimeMillis();
-//            ScreenshotUtil.saveScreenshot(screenshot,
-//                    "src/main/resources/screenshots/screenshot-" + time + ".jpeg");
 
             // Get action from DQN model
             int action = predictAction(state);
 
             if (isGameOver) {
+                ScreenshotUtil.saveScreenshot(screenshot, "src/main/resources/screenshots/" + startTime + "- action -" + action + ".jpeg");
                 ModelSerializer.writeModel(model, MODEL_PATH, true);
                 gameHandler.performAction(99);
                 isGameOver = false;
-                i++;
                 continue;
             }
 
             var reward = gameHandler.performAction(action);
 
             // Capture the next state (screenshot)
-            var nextScreenshot = ScreenshotUtil.takeScreenshot(x, y, gameWidth, gameHeight);
+            var nextScreenshot = ScreenshotUtil.takeScreenshot(rect);
             INDArray nextState = ScreenshotUtil.preprocessScreenshot(nextScreenshot);
-            train(state, action, reward, nextState);
 
             // Store the training data
-            trainingDataList.add(new TrainingData(state, action, reward, nextState));
-
-
-            recentSteps.add(new GameStep(state, action, reward));
-            if (recentSteps.size() > 5) {
-                recentSteps.poll();
+            currentGameData.add(new TrainingData(state, action, reward, nextState));
+            // Ensure only the last 120 actions are stored
+            if (currentGameData.size() > 60) {
+                currentGameData.poll(); // Remove the oldest entry
             }
 
             // Check if the game is over and punish the last 5 actions if it is
             isGameOver = gameOverDetector.detectGameOverWithTemplate(screenshot);
             if (isGameOver) {
-                for (GameStep step : recentSteps) {
+                // Punish by reducing the reward
+                for (int gameDataIndex = Math.max(0, currentGameData.size() - 12); gameDataIndex < currentGameData.size(); gameDataIndex++) {
+                    TrainingData step = currentGameData.get(gameDataIndex);
                     step.setReward(step.getReward() - 1); // Punish by reducing the reward
                     train(step.getState(), step.getAction(), step.getReward(), nextState);
                 }
-            }
 
-            if (i % 25 == 0) {
-                // Save the training data to a file every 25 games.
+                // Add the punished actions to the total training data array (you can store it in a global list)
+                trainingDataList.addAll(currentGameData);
                 saveTrainingData(trainingDataList, "src/main/resources/trainingData.dat");
             }
         }
+
+        printAsciiArt();
     }
 
     public static int predictAction(INDArray state) {
 
-        if (random.nextInt(100) < 1) {
+        if (random.nextInt(100) < 5) {
             // Return a random number between 0 and 4
             int randomNumber = random.nextInt(5);
             return randomNumber;
@@ -186,7 +168,6 @@ public class TakkieBot {
 
         // Predict Q-values for all actions
         INDArray qValues = model.output(state);
-        System.out.println(qValues);
         int bestAction = qValues.argMax(1).getInt(0);  // Get the action with the highest Q-value
         return bestAction;
     }
@@ -221,18 +202,53 @@ public class TakkieBot {
         model.fit(state, qValues);  // Train the model with the updated Q-values
     }
 
-    public static List<TrainingData> loadTrainingData(String filePath)
-            throws IOException, ClassNotFoundException {
-        try (FileInputStream fileIn = new FileInputStream(filePath);
-             ObjectInputStream in = new ObjectInputStream(fileIn)) {
+    public static List<TrainingData> loadTrainingData(String filePath) throws IOException, ClassNotFoundException {
+        try (FileInputStream fileIn = new FileInputStream(filePath); ObjectInputStream in = new ObjectInputStream(fileIn)) {
             return (List<TrainingData>) in.readObject();
         }
     }
 
     public static void saveTrainingData(List<TrainingData> trainingDataList, String filePath) throws IOException {
-        try (FileOutputStream fileOut = new FileOutputStream(filePath);
-             ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+        try (FileOutputStream fileOut = new FileOutputStream(filePath); ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
             out.writeObject(trainingDataList);
         }
     }
+
+    public static void printAsciiArt() {
+        String asciiArt = """
+                  TTTTT  AAAAA  K   K  K   K  III  EEEEE      B   B  OOOOO  TTTTT
+                    T    A   A  K  K   K K   I   E          B   B  O   O    T  
+                    T    AAAAA  KKK    KK    I   EEEE       BBBBB  O   O    T  
+                    T    A   A  K  K   K K   I   E          B   B  O   O    T  
+                    T    A   A  K   K  K   K  III  EEEEE     B   B  OOOOO    T  
+                """;
+        System.out.println(asciiArt);
+    }
+
+    public static void gatherTrainingData(BrowserManager browserManager) throws IOException {
+        var driver = browserManager.getDriver();
+        var game = driver.findElement(By.id("game"));
+        var rect = game.getRect();
+        KeyboardUtil keyboardUtil = new KeyboardUtil();
+
+        while (true) {
+            String key = keyboardUtil.listen();
+            saveAndSortScreenshot(key, rect);
+            System.out.println(key);
+        }
+
+    }
+
+    public static void saveAndSortScreenshot(String key, Rectangle rect) throws IOException {
+        var newFrame = ScreenshotUtil.takeScreenshot(rect);
+
+        String folderName = "src/main/resources/screenshots/" + key;
+        File folder = new File(folderName);
+        if (!folder.exists()) folder.mkdirs();
+        String fileName = folderName + "/frame_" + System.currentTimeMillis() + ".png";
+
+        ScreenshotUtil.saveScreenshot(newFrame, fileName);
+    }
+
+
 }
