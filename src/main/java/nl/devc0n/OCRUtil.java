@@ -3,6 +3,7 @@ package nl.devc0n;
 import net.sourceforge.tess4j.ITesseract;
 import net.sourceforge.tess4j.Tesseract;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -20,8 +21,8 @@ public class OCRUtil {
         }
     }
 
-    public static String extractTextFromImage() {
-        String screenshotPath = properties.getProperty("processed.path");
+    public static String extractTextFromImage(BufferedImage image) {
+
         String tessdataPath = properties.getProperty("tessdata.path");
         String tessdataLanguage = properties.getProperty("tessdata.language");
 
@@ -30,8 +31,8 @@ public class OCRUtil {
         instance.setLanguage(tessdataLanguage);
 
         try {
-            // OCR uitvoeren op de afbeelding
-            String result = instance.doOCR(new File(screenshotPath));
+            // Perform OCR on the BufferedImage
+            String result = instance.doOCR(image);
             return result;
         } catch (Exception e) {
             e.printStackTrace();

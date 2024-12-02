@@ -2,6 +2,9 @@ package nl.devc0n;
 
 import nl.devc0n.constants.State;
 
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+
 public class GameStateReader {
     private final BrowserManager browserManager;
 
@@ -9,17 +12,8 @@ public class GameStateReader {
         this.browserManager = browserManager;
     }
 
-    public State getGameState(){
-        if (isGameOver()) {
-            return State.RESTARTING;
-        }else {
-            return State.PLAYING;
-        }
-    }
-
-    public boolean isGameOver() {
-        browserManager.takeScreenshot();
-        String ocrResult = OCRUtil.extractTextFromImage();
+    public boolean isGameOver(BufferedImage image) throws IOException {
+        String ocrResult = OCRUtil.extractTextFromImage(image);
         if (ocrResult != null) {
             return ocrResult.toLowerCase().contains("goed gedaan");
         }

@@ -26,6 +26,16 @@
             <version>1.0.0-M2.1</version>
         </dependency>
         <dependency>
+            <groupId>org.nd4j</groupId>
+            <artifactId>nd4j-native-platform</artifactId>
+            <version>1.0.0-M2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.datavec</groupId>
+            <artifactId>datavec-api</artifactId>
+            <version>1.0.0-M2.1</version>
+        </dependency>
+        <dependency>
             <groupId>net.sourceforge.tess4j</groupId>
             <artifactId>tess4j</artifactId>
             <version>5.13.0</version>
@@ -40,11 +50,17 @@
             <artifactId>javacv-platform</artifactId>
             <version>1.5.11</version>
         </dependency>
+        <dependency>
+            <groupId>org.opencv</groupId>
+            <artifactId>opencv</artifactId>
+            <version>4.10.0</version>
+        </dependency>
 
-
-
-
-
+        <dependency>
+            <groupId>org.openpnp</groupId>
+            <artifactId>opencv</artifactId>
+            <version>4.5.1-2</version>
+        </dependency>
 
     </dependencies>
 
