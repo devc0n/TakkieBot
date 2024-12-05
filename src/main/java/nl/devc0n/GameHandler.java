@@ -15,7 +15,7 @@ public class GameHandler {
 
     private final WebDriver driver;
     private final WebDriverWait wait;
-    private final Map<Integer, Integer> actionMap = new HashMap<Integer, Integer>();
+    private final Map<Integer, Integer> actionMap = new HashMap<>();
 
     public GameHandler(WebDriver driver) {
         this.driver = driver;
@@ -27,23 +27,22 @@ public class GameHandler {
 
         switch (action) {
             case 0:
-                return 0.2;
+                return 0.1;
             case 1:
                 driver.findElement(By.tagName("body")).sendKeys(Keys.ARROW_UP);
-                return 0.2;
+                return 0.1;
             case 2:
                 driver.findElement(By.tagName("body")).sendKeys(Keys.ARROW_LEFT);
-                return 0.2;
+                return 0.1;
             case 3:
                 driver.findElement(By.tagName("body")).sendKeys(Keys.ARROW_RIGHT);
-                return 0.2;
+                return 0.1;
             case 4:
                 driver.findElement(By.tagName("body")).sendKeys(Keys.ARROW_DOWN);
-                return 0.2;
+                return 0.1;
             case 99:
-                Thread.sleep(10000);
-                WebElement startGameButton = wait.until(
-                        ExpectedConditions.presenceOfElementLocated(By.className("icon-only")));
+                Thread.sleep(3000);
+                WebElement startGameButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.className("icon-only")));
                 startGameButton.click();
                 Thread.sleep(4000);
                 return 0;
@@ -55,18 +54,15 @@ public class GameHandler {
 
     public void setupInitialGameState() throws InterruptedException {
         // Accept cookies
-        WebElement acceptCookiesButton = wait.until(ExpectedConditions.presenceOfElementLocated(
-                By.id("CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll")));
+        WebElement acceptCookiesButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll")));
         acceptCookiesButton.click();
 
         // Start the game
-        WebElement startGameButton = wait.until(
-                ExpectedConditions.presenceOfElementLocated(By.className("launch-button")));
+        WebElement startGameButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.className("launch-button")));
         startGameButton.click();
 
         // Close instructions
-        WebElement closeInstructionsButton =
-                wait.until(ExpectedConditions.presenceOfElementLocated(By.className("close")));
+        WebElement closeInstructionsButton = wait.until(ExpectedConditions.presenceOfElementLocated(By.className("close")));
         closeInstructionsButton.click();
 
         Thread.sleep(4000);

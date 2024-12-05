@@ -1,4 +1,4 @@
-package nl.devc0n;
+package nl.devc0n.domain;
 
 import org.nd4j.linalg.api.ndarray.INDArray;
 
@@ -7,16 +7,14 @@ import java.io.Serializable;
 public class TrainingData implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private INDArray state;
-    private int action;
+    private final INDArray state;
+    private final int action;
     private double reward;
-    private INDArray nextState;
 
-    public TrainingData(INDArray state, int action, double reward, INDArray nextState) {
+    public TrainingData(INDArray state, int action, double reward) {
         this.state = state;
         this.action = action;
         this.reward = reward;
-        this.nextState = nextState;
     }
 
     public INDArray getState() {
@@ -29,10 +27,6 @@ public class TrainingData implements Serializable {
 
     public double getReward() {
         return reward;
-    }
-
-    public INDArray getNextState() {
-        return nextState;
     }
 
     public void setReward(double reward) {

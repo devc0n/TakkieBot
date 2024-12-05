@@ -4,10 +4,7 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
 import javax.imageio.ImageIO;
-import java.awt.AWTException;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.Robot;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -15,7 +12,7 @@ import java.io.IOException;
 
 public class ScreenshotUtil {
 
-    private static Robot robot;
+    private static final Robot robot;
 
     static {
         try {
@@ -42,13 +39,13 @@ public class ScreenshotUtil {
     }
 
     public static INDArray preprocessScreenshot(BufferedImage screenshot) {
-        // Resize the image to 84x84
+// Resize the image to 84x84
         BufferedImage resizedImage = new BufferedImage(84, 84, BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = resizedImage.createGraphics();
         g2d.drawImage(screenshot, 0, 0, 84, 84, null);
         g2d.dispose();
 
-        // Normalize the image to [0, 1]
+// Normalize the image to [0, 1]
         int width = resizedImage.getWidth();
         int height = resizedImage.getHeight();
         float[] pixels = new float[width * height * 3];  // RGB channels
@@ -63,11 +60,12 @@ public class ScreenshotUtil {
             }
         }
 
-        return Nd4j.create(pixels)
-                .reshape(1, 84, 84, 3);  // Shape: [batch, width, height, channels]
+// Reshape to NHWC format (batch size, height, width, channels)
+        return Nd4j.create(pixels).reshape(1, 84, 84, 3);  // Shape: [batch, height, width, channels]
+
     }
 
-    public static void saveINDArrayAsImage(INDArray array) throws IOException {
+    public static void saveINDArrayAsImage(INDArray array, String filepath) throws IOException {
         int width = (int) array.shape()[1];
         int height = (int) array.shape()[2];
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -81,11 +79,9 @@ public class ScreenshotUtil {
                 image.setRGB(x, y, rgb);
             }
         }
-        var i =        System.currentTimeMillis();
-        var filepath = "src/main/resources/screenshots/processed-" +  i + ".jpeg";
+
         saveScreenshot(image, filepath);
     }
-
 
 
 }

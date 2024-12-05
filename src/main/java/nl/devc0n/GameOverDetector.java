@@ -1,6 +1,5 @@
 package nl.devc0n;
 
-import org.nd4j.linalg.api.ndarray.INDArray;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -19,26 +18,22 @@ public class GameOverDetector {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
     }
 
-    private Mat template; // Store the template as an OpenCV Mat
+    private final Mat template; // Store the template as an OpenCV Mat
 
     // Constructor to initialize the template
-    public GameOverDetector(BufferedImage templateImage) {
+    public GameOverDetector() throws IOException {
         // Convert BufferedImage template to OpenCV Mat
+        BufferedImage templateImage = ImageIO.read(new File("src/main/resources/masks/mask.png"));
         this.template = bufferedImageToMat(templateImage);
     }
 
-    public boolean detectGameOverWithTemplate(BufferedImage screenShot) throws IOException {
-
-
-
-
-
+    public boolean detectGameOverWithTemplate(BufferedImage screenShot) {
         // Convert the screenshot to OpenCV Mat
         Mat screenshotMat = bufferedImageToMat(screenShot);
 
         if (screenshotMat.empty() || template.empty()) {
             System.err.println("Failed to load images.");
-            return false;
+            return true;
         }
 
         // Create a result matrix to hold matching results
@@ -51,17 +46,14 @@ public class GameOverDetector {
 
         // Find the best match location
         Core.MinMaxLocResult mmr = Core.minMaxLoc(result);
-        double threshold = 0.15; // Set a threshold for match quality (35% match)
+        double threshold = 0.13; // Set a threshold for match quality (35% match)
 
         // Check if the match is strong enough
-        var isGameOver = mmr.maxVal >= threshold;
-
-        return isGameOver;
+        return mmr.maxVal >= threshold;
     }
 
     public Mat bufferedImageToMat(BufferedImage image) {
         if (image.getType() != BufferedImage.TYPE_3BYTE_BGR) {
-            // Convert the image to TYPE_3BYTE_BGR
             BufferedImage convertedImg = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
             convertedImg.getGraphics().drawImage(image, 0, 0, null);
             image = convertedImg;
